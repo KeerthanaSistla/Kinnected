@@ -1,9 +1,8 @@
-
 import { UserCircle, Home, Users, BrainCircuit, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { toast } from "sonner";
 
 interface NavigationMenuProps {
@@ -24,12 +23,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
   const handleNavigation = (path: string) => {
     navigate(path);
     onClose();
-    // Show toast for sections under development
-    if (path !== "/home") {
-      toast("Coming Soon", {
-        description: "This section is currently under development",
-      });
-    }
+    // Removed toast for sections under development
   };
   
   const handleLogout = () => {
@@ -52,6 +46,8 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
       {/* Sidebar - Using Sheet component for better animation */}
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent side="right" className="p-0 w-64">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <SheetDescription className="sr-only">User navigation and settings</SheetDescription>
           <div className="flex flex-col h-full">
             {/* User Info */}
             <div className="flex flex-col items-center py-6">

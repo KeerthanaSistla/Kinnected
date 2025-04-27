@@ -145,7 +145,7 @@ const Requests = () => {
                       <h3 className="font-medium">{request.fromUser.fullName}</h3>
                       <p className="text-sm text-gray-500">@{request.fromUser.username}</p>
                       <p className="text-sm mt-1">
-                        Wants to connect as your <span className="font-medium">{request.relationType}</span>
+                        Wants you to connect as their <span className="font-medium">{request.relationType}</span>
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(request.createdAt).toLocaleString()}

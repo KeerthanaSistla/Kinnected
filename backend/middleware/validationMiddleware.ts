@@ -108,11 +108,7 @@ export const validateConnection = (req: Request, res: Response, next: NextFuncti
       if (!toUser) {
         errors.push('Target user ID is required for non-placeholder relations');
       }
-    }
-
-    // Nickname is always required
-    if (!nickname) {
-      errors.push('Nickname is required');
+      // Nickname is optional for real user connections
     }
 
     if (errors.length > 0) {
