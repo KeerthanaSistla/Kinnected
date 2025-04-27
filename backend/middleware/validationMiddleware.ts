@@ -5,7 +5,7 @@ interface RegisterData {
   username: string;
   email: string;
   password: string;
-  fullName: string;
+  name: string;
 }
 
 interface LoginData {
@@ -15,37 +15,44 @@ interface LoginData {
 
 export const validateRegister = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { username, email, password, fullName }: RegisterData = req.body;
-    const errors: string[] = [];
+    const { username, email, password, name }: RegisterData = req.body;
+    const errors: { [key: string]: string } = {};
 
     // Username validation
-    if (!username || username.length < 3 || username.length > 30) {
-      errors.push('Username must be between 3 and 30 characters');
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      errors.push('Username can only contain letters, numbers, and underscores');
+    if (!username) {
+      errors.username = 'Username is required';
+    } else if (username.length < 3) {
+      errors.username = 'Username must be at least 3 characters long';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      errors.username = 'Username can only contain letters, numbers, and underscores';
     }
 
     // Email validation
-    if (!email || !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-      errors.push('Please provide a valid email address');
+    if (!email) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Please enter a valid email address';
     }
 
     // Password validation
-    if (!password || password.length < 6) {
-      errors.push('Password must be at least 6 characters long');
-    }
-    if (!/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
-      errors.push('Password must contain both letters and numbers');
-    }
-
-    // Full name validation
-    if (!fullName || fullName.trim().length < 2 || fullName.trim().length > 50) {
-      errors.push('Full name must be between 2 and 50 characters');
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 8) {
+      errors.password = 'Password must be at least 8 characters long';
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+      errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
     }
 
-    if (errors.length > 0) {
-      throw new ValidationError('Validation failed', errors);
+    // Name validation
+    if (!name) {
+      errors.name = 'Name is required';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        success: false,
+        errors
+      });
     }
 
     next();
@@ -57,20 +64,20 @@ export const validateRegister = (req: Request, res: Response, next: NextFunction
 export const validateLogin = (req: Request, res: Response, next: NextFunction) => {
   try {
     const { username, password }: LoginData = req.body;
-    const errors: string[] = [];
+    const errors: { [key: string]: string } = {};
 
-    // Username validation
     if (!username) {
-      errors.push('Username is required');
+      errors.username = 'Username is required';
     }
-
-    // Password validation
     if (!password) {
-      errors.push('Password is required');
+      errors.password = 'Password is required';
     }
 
-    if (errors.length > 0) {
-      throw new ValidationError('Validation failed', errors);
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({
+        success: false,
+        errors
+      });
     }
 
     next();

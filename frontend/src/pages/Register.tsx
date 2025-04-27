@@ -1,66 +1,140 @@
-
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Icons } from "@/components/Icons";
 import { useToast } from "@/hooks/use-toast";
+import axios from 'axios';
 
-const Register = () => {
+interface FormData {
+  username: string;
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface FormErrors {
+  username?: string;
+  name?: string;
+  email?: string;
+  password?: string;
+  details?: string | string[];
+}
+
+const Register: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    username: "",
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    password: "",
-    confirmPassword: "",
+  const [formData, setFormData] = useState<FormData>({
+    username: '',
+    name: '',
+    email: '',
+    password: ''
   });
-  
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    let isValid = true;
+
+    // Username validation
+    if (!formData.username) {
+      newErrors.username = 'Username is required';
+      isValid = false;
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters long';
+      isValid = false;
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = 'Username can only contain letters, numbers, and underscores';
+      isValid = false;
+    }
+
+    // Name validation
+    if (!formData.name) {
+      newErrors.name = 'Name is required';
+      isValid = false;
+    }
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+      isValid = false;
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
-  
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
+    setErrors({});
+    setMessage('');
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      setMessage('Registration successful! Redirecting to login...');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    } catch (error: any) {
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        const newErrors: FormErrors = {};
+        
+        // Handle rate limit error
+        if (error.response.status === 429) {
+          newErrors.details = 'Too many attempts. Please wait a moment and try again.';
+        }
+        // Handle validation errors
+        else if (errorData.field && errorData.details) {
+          newErrors[errorData.field as keyof FormErrors] = errorData.details[0];
+        }
+        // Handle general error
+        else {
+          newErrors.details = errorData.message || 'Registration failed. Please try again.';
+        }
+        
+        setErrors(newErrors);
+      } else {
+        setErrors({ details: 'An unexpected error occurred. Please try again.' });
+      }
+    } finally {
       setIsLoading(false);
-      return;
     }
-    
-    // For demonstration, we'll simulate registration success
-    // In a real app, this would connect to your backend/Supabase
-    setTimeout(() => {
-      // Store in localStorage for demo purposes
-      localStorage.setItem("kinnected_user", JSON.stringify({
-        username: formData.username,
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-      }));
-      
-      toast({
-        title: "Success",
-        description: "Account created successfully!",
-      });
-      
-      setIsLoading(false);
-      navigate("/login");
-    }, 1500);
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 to-blue-50">
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
@@ -83,22 +157,31 @@ const Register = () => {
                 value={formData.username}
                 onChange={handleChange}
                 required
+                minLength={3}
+                className={errors.username ? "border-red-500" : ""}
               />
+              {errors.username && (
+                <p className="text-xs text-red-500">{errors.username}</p>
+              )}
               <p className="text-xs text-gray-500">
-                This will be your primary identifier on Kinnected
+                Username must be 3-30 characters long and can only contain letters, numbers, and underscores
               </p>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name *</Label>
+              <Label htmlFor="name">Full Name *</Label>
               <Input
-                id="fullName"
-                name="fullName"
+                id="name"
+                name="name"
                 placeholder="Your full name"
-                value={formData.fullName}
+                value={formData.name}
                 onChange={handleChange}
                 required
+                className={errors.name ? "border-red-500" : ""}
               />
+              {errors.name && (
+                <p className="text-xs text-red-500">{errors.name}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -107,22 +190,18 @@ const Register = () => {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="your.email@example.com"
+                placeholder="your.email@gmail.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
+                className={errors.email ? "border-red-500" : ""}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Input
-                id="phoneNumber"
-                name="phoneNumber"
-                placeholder="Your phone number (optional)"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-              />
+              {errors.email && (
+                <p className="text-xs text-red-500">{errors.email}</p>
+              )}
+              <p className="text-xs text-gray-500">
+                Please use a valid email address
+              </p>
             </div>
             
             <div className="space-y-2">
@@ -135,21 +214,22 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                minLength={8}
+                className={errors.password ? "border-red-500" : ""}
               />
+              {errors.password && (
+                <p className="text-xs text-red-500">{errors.password}</p>
+              )}
+              <p className="text-xs text-gray-500">
+                Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters
+              </p>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password *</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            {errors.details && (
+              <div className="text-red-500 text-sm mt-2">
+                {errors.details}
+              </div>
+            )}
             
             <Button 
               type="submit" 

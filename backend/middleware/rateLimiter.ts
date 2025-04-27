@@ -13,17 +13,16 @@ export const apiLimiter = rateLimit({
     legacyHeaders: false
 });
 
-// Create a stricter limiter for authentication routes
+// Create a limiter for authentication routes
 export const authLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5, // Limit each IP to 5 failed requests per hour
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Limit each IP to 20 requests per 15 minutes
     message: {
         success: false,
-        message: 'Too many failed attempts, please try again later'
+        message: 'Too many attempts, please try again later'
     },
     standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests: true // Only count failed requests
+    legacyHeaders: false
 });
 
 // Create a limiter for AI routes

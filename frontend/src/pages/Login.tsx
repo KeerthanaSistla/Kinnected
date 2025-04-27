@@ -1,16 +1,16 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Icons } from "@/components/Icons";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -19,47 +19,71 @@ const Login = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError(""); // Clear error when user types
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
     
-    // For demonstration, we'll simulate login success
-    // In a real app, this would connect to your backend/Supabase
-    setTimeout(() => {
-      // Check if user exists in localStorage (demo purposes only)
-      const storedUser = localStorage.getItem("kinnected_user");
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        
-        // Simulate successful login (in a real app, validate password too)
-        if (user.username === formData.username) {
-          localStorage.setItem("kinnected_isLoggedIn", "true");
-          
-          toast({
-            title: "Success",
-            description: "Logged in successfully!",
-          });
-          
-          navigate("/home");
-        } else {
-          toast({
-            title: "Error",
-            description: "Invalid username or password",
-            variant: "destructive",
-          });
-        }
-      } else {
-        toast({
-          title: "Error",
-          description: "Account not found. Please register first.",
-          variant: "destructive",
-        });
-      }
+    try {
+      console.log('Login form data:', {
+        username: formData.username,
+        passwordLength: formData.password.length,
+        password: '*'.repeat(formData.password.length) // Don't log actual password
+      });
       
+      const response = await axios.post('http://localhost:5000/api/auth/login', formData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true
+      });
+      
+      console.log('Login response:', response.data);
+      
+      if (response.data.success) {
+        // Store token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        toast({
+          title: "Success",
+          description: "Logged in successfully!",
+        });
+        
+        navigate("/home");
+      } else {
+        setError(response.data.message || "Login failed. Please try again.");
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      console.error('Error response data:', error.response?.data);
+      
+      if (error.response?.status === 429) {
+        setError("Too many attempts. Please wait a moment and try again.");
+      } else if (error.response?.data?.errors) {
+        // Handle field-specific errors
+        const errors = error.response.data.errors;
+        if (errors.username) {
+          setError(errors.username);
+        } else if (errors.password) {
+          setError(errors.password);
+        } else {
+          setError("Invalid credentials. Please try again.");
+        }
+      } else if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else if (error.message === "Network Error") {
+        setError("Unable to connect to the server. Please check your internet connection.");
+      } else {
+        setError("Login failed. Please check your credentials and try again.");
+      }
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
   
   return (
@@ -104,6 +128,12 @@ const Login = () => {
                 required
               />
             </div>
+            
+            {error && (
+              <div className="text-red-500 text-sm">
+                {error}
+              </div>
+            )}
             
             <Button 
               type="submit" 

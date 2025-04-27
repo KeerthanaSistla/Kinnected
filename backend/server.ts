@@ -41,6 +41,13 @@ app.use('/api/', apiLimiter);
 app.use('/api/auth', authLimiter);
 app.use('/api/ai', aiLimiter);
 
+// Request logging middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Request body:', req.body);
+  next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -56,99 +63,70 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// 404 handler
+// 404 handler - Move this after all routes
 app.use((req: Request, res: Response) => {
+  console.log(`404 - Route not found: ${req.method} ${req.url}`);
   res.status(404).json({
     success: false,
-    message: 'API endpoint not found'
+    message: 'API endpoint not found',
+    path: req.url
   });
 });
 
 // Global error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Error:', err);
-
-  if (err instanceof CustomError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-      code: err.code,
-      errors: err.errors,
-      field: err.field
-    });
-  }
-
-  // MongoDB duplicate key error
-  if (err.name === 'MongoServerError' && (err as any).code === 11000) {
-    const field = Object.keys((err as any).keyValue)[0];
-    return res.status(409).json({
-      success: false,
-      code: 'DUPLICATE_ERROR',
-      message: `${field} already exists`,
-      field
-    });
-  }
-
-  // Validation error
+  
+  // Handle Mongoose validation errors
   if (err.name === 'ValidationError') {
-    const errors = Object.values((err as any).errors).map((err: any) => err.message);
+    const errors = err.errors ? Object.values(err.errors)
+      .map((error: any) => error.message)
+      .filter((msg: string | null) => msg !== null) : ['Validation failed'];
+    
+    console.log('Validation errors:', errors);
+    
     return res.status(400).json({
       success: false,
-      code: 'VALIDATION_ERROR',
       message: 'Validation Error',
-      errors
+      details: errors.length > 0 ? errors : ['Invalid input data']
     });
   }
-
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
+  
+  // Handle duplicate key errors
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    console.log('Duplicate key error:', field);
+    return res.status(400).json({
       success: false,
-      code: 'INVALID_TOKEN',
-      message: 'Invalid token'
+      message: `${field} already exists`,
+      field,
+      details: [`This ${field} is already in use. Please choose another one.`]
     });
   }
-
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      success: false,
-      code: 'TOKEN_EXPIRED',
-      message: 'Token expired'
-    });
-  }
-
-  // Default error
+  
+  // Handle other errors
+  console.log('Other error:', err.message);
   res.status(500).json({
     success: false,
-    code: 'SERVER_ERROR',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
 
-// Database connection with retry mechanism
-const connectDB = async (retryCount = 5) => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI as string);
-    console.log('Connected to MongoDB');
-  } catch (error) {
-    if (retryCount > 0) {
-      console.log(`MongoDB connection failed. Retrying... (${retryCount} attempts left)`);
-      setTimeout(() => connectDB(retryCount - 1), 5000);
-    } else {
-      console.error('Failed to connect to MongoDB:', error);
-      process.exit(1);
-    }
-  }
-};
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://kinnected:kinnected@cluster0.8j8j8j8.mongodb.net/kinnected?retryWrites=true&w=majority';
 
 // Start server
 const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
-    await connectDB();
+    console.log('Attempting to connect to MongoDB...');
+    await mongoose.connect(MONGODB_URI);
+    console.log('✅ Connected to MongoDB successfully');
+    console.log('MongoDB URI:', MONGODB_URI);
+    
     app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-      console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8080'}`);
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
