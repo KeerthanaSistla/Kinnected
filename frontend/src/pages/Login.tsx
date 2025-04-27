@@ -47,13 +47,12 @@ const Login = () => {
       if (response.data.success) {
         // Store token and user data
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
+        localStorage.setItem('kinnected_user', JSON.stringify(response.data.user));
+        localStorage.setItem('kinnected_isLoggedIn', 'true');
         toast({
           title: "Success",
           description: "Logged in successfully!",
         });
-        
         navigate("/home");
       } else {
         setError(response.data.message || "Login failed. Please try again.");

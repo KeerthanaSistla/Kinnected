@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Check, X, UserPlus } from "lucide-react";
@@ -6,13 +5,17 @@ import { Button } from "@/components/ui/button";
 import { NavigationMenu } from "@/components/NavigationMenu";
 import { Icons } from "@/components/Icons";
 import { useToast } from "@/hooks/use-toast";
+import api from '@/services/api';
 
 interface ConnectionRequest {
-  id: string;
-  from: string;
-  fromFullName: string;
-  relation: string;
-  timestamp: string;
+  _id: string;
+  fromUser: {
+    username: string;
+    fullName: string;
+    profilePicture?: string;
+  };
+  relationType: string;
+  createdAt: string;
 }
 
 const Requests = () => {
@@ -35,33 +38,14 @@ const Requests = () => {
     if (userData) {
       setCurrentUser(JSON.parse(userData));
       
-      // Load mock connection requests (would come from backend in a real app)
-      // In a real implementation, we would fetch this from the backend API
-      const mockRequests: ConnectionRequest[] = [
-        {
-          id: "req-001",
-          from: "Bhavana",
-          fromFullName: "Bhavana Ramakrishna",
-          relation: "sibling",
-          timestamp: "2025-04-14T09:45:00Z",
-        },
-        {
-          id: "req-002",
-          from: "Akshu",
-          fromFullName: "Akshatha",
-          relation: "child",
-          timestamp: "2025-04-13T14:20:00Z",
-        },
-        {
-          id: "req-003",
-          from: "shrav",
-          fromFullName: "Shravya",
-          relation: "mother",
-          timestamp: "2025-04-12T11:30:00Z",
-        }
-      ];
-      
-      setConnectionRequests(mockRequests);
+      // Fetch real pending requests from backend
+      api.get('/api/connections/pending')
+        .then(res => {
+          setConnectionRequests(res.data.requests || []);
+        })
+        .catch(() => {
+          setConnectionRequests([]);
+        });
     }
   }, [navigate]);
   
@@ -70,30 +54,34 @@ const Requests = () => {
     navigate("/login");
   };
   
-  const handleAcceptRequest = (requestId: string) => {
-    const request = connectionRequests.find(req => req.id === requestId);
+  const handleAcceptRequest = async (requestId: string) => {
+    const request = connectionRequests.find(req => req._id === requestId);
     if (!request) return;
-    
-    // Remove request from list (would be an API call in a real app)
-    setConnectionRequests(connectionRequests.filter(req => req.id !== requestId));
-    
-    toast({
-      title: "Connection Accepted",
-      description: `You are now connected with ${request.fromFullName} as ${request.relation}`
-    });
+    try {
+      await api.patch(`/api/connections/accept/${requestId}`);
+      setConnectionRequests(connectionRequests.filter(req => req._id !== requestId));
+      toast({
+        title: "Connection Accepted",
+        description: `You are now connected with ${request.fromUser.fullName} as ${request.relationType}`
+      });
+    } catch {
+      toast({ title: "Error", description: "Failed to accept request" });
+    }
   };
   
-  const handleRejectRequest = (requestId: string) => {
-    const request = connectionRequests.find(req => req.id === requestId);
+  const handleRejectRequest = async (requestId: string) => {
+    const request = connectionRequests.find(req => req._id === requestId);
     if (!request) return;
-    
-    // Remove request from list (would be an API call in a real app)
-    setConnectionRequests(connectionRequests.filter(req => req.id !== requestId));
-    
-    toast({
-      title: "Request Declined",
-      description: `Connection request from ${request.fromFullName} has been declined`
-    });
+    try {
+      await api.patch(`/api/connections/reject/${requestId}`);
+      setConnectionRequests(connectionRequests.filter(req => req._id !== requestId));
+      toast({
+        title: "Request Declined",
+        description: `Connection request from ${request.fromUser.fullName} has been declined`
+      });
+    } catch {
+      toast({ title: "Error", description: "Failed to decline request" });
+    }
   };
   
   if (!currentUser) return null;
@@ -149,28 +137,26 @@ const Requests = () => {
               <div className="space-y-4">
                 {connectionRequests.map((request) => (
                   <div 
-                    key={request.id} 
+                    key={request._id} 
                     className="border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-                    style={{ backgroundColor: "#f7f0e2", borderColor: "#15803d" }} // Change border color here
+                    style={{ backgroundColor: "#f7f0e2", borderColor: "#15803d" }}
                   >
-
                     <div>
-                      <h3 className="font-medium">{request.fromFullName}</h3>
-                      <p className="text-sm text-gray-500">@{request.from}</p>
+                      <h3 className="font-medium">{request.fromUser.fullName}</h3>
+                      <p className="text-sm text-gray-500">@{request.fromUser.username}</p>
                       <p className="text-sm mt-1">
-                        Wants to connect as your <span className="font-medium">{request.relation}</span>
+                        Wants to connect as your <span className="font-medium">{request.relationType}</span>
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {new Date(request.timestamp).toLocaleString()}
+                        {new Date(request.createdAt).toLocaleString()}
                       </p>
                     </div>
-
                     <div className="flex gap-2 self-end sm:self-center">
                       <Button 
                         variant="outline" 
                         size="sm"
                         className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                        onClick={() => handleRejectRequest(request.id)}
+                        onClick={() => handleRejectRequest(request._id)}
                       >
                         <X className="h-4 w-4 mr-1" />
                         Decline
@@ -178,7 +164,7 @@ const Requests = () => {
                       <Button 
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
-                        onClick={() => handleAcceptRequest(request.id)}
+                        onClick={() => handleAcceptRequest(request._id)}
                       >
                         <Check className="h-4 w-4 mr-1" />
                         Accept

@@ -88,16 +88,31 @@ export const validateLogin = (req: Request, res: Response, next: NextFunction) =
 
 export const validateConnection = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { toUser, relationType } = req.body;
+    const { toUser, relationType, isPlaceholder, fullName, nickname } = req.body;
     const errors: string[] = [];
 
-    if (!toUser) {
-      errors.push('Target user is required');
-    }
-
-    const validRelations = ['parent', 'child', 'sibling', 'spouse', 'mother', 'father'];
+    // Validate relation type
+    const validRelations = ['mother', 'father', 'sibling', 'spouse', 'child'];
     if (!relationType || !validRelations.includes(relationType)) {
       errors.push('Invalid relation type');
+    }
+
+    // Validate based on whether it's a placeholder or real user
+    if (isPlaceholder) {
+      // For placeholder, require fullName or nickname
+      if (!fullName && !nickname) {
+        errors.push('Either full name or nickname is required for placeholder relations');
+      }
+    } else {
+      // For real user connection, require toUser
+      if (!toUser) {
+        errors.push('Target user ID is required for non-placeholder relations');
+      }
+    }
+
+    // Nickname is always required
+    if (!nickname) {
+      errors.push('Nickname is required');
     }
 
     if (errors.length > 0) {
