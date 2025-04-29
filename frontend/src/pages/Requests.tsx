@@ -24,7 +24,9 @@ const Requests = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
-  
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<string>("none");
+
   useEffect(() => {
     // Check if user is logged in
     const isLoggedIn = localStorage.getItem("kinnected_isLoggedIn") === "true";
@@ -32,12 +34,12 @@ const Requests = () => {
       navigate("/login");
       return;
     }
-    
+
     // Get user data
     const userData = localStorage.getItem("kinnected_user");
     if (userData) {
       setCurrentUser(JSON.parse(userData));
-      
+
       // Fetch real pending requests from backend
       api.get('/api/connections/pending')
         .then(res => {
@@ -48,27 +50,32 @@ const Requests = () => {
         });
     }
   }, [navigate]);
-  
+
   const handleLogout = () => {
     localStorage.removeItem("kinnected_isLoggedIn");
     navigate("/login");
   };
-  
+
   const handleAcceptRequest = async (requestId: string) => {
     const request = connectionRequests.find(req => req._id === requestId);
     if (!request) return;
+
     try {
-      await api.patch(`/api/connections/accept/${requestId}`);
+      await api.patch(`/api/connections/accept/${requestId}`, {
+        connectWithoutReciprocating: true
+      });
       setConnectionRequests(connectionRequests.filter(req => req._id !== requestId));
       toast({
         title: "Connection Accepted",
         description: `You are now connected with ${request.fromUser.fullName} as ${request.relationType}`
       });
+      setSelectedRequestId(null);
+      setSelectedGender("none");
     } catch {
       toast({ title: "Error", description: "Failed to accept request" });
     }
   };
-  
+
   const handleRejectRequest = async (requestId: string) => {
     const request = connectionRequests.find(req => req._id === requestId);
     if (!request) return;
@@ -151,25 +158,35 @@ const Requests = () => {
                         {new Date(request.createdAt).toLocaleString()}
                       </p>
                     </div>
-                    <div className="flex gap-2 self-end sm:self-center">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                        onClick={() => handleRejectRequest(request._id)}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Decline
-                      </Button>
-                      <Button 
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                        onClick={() => handleAcceptRequest(request._id)}
-                      >
-                        <Check className="h-4 w-4 mr-1" />
-                        Accept
-                      </Button>
-                    </div>
+            <div className="flex flex-col gap-2 self-end sm:self-center">
+              {/* Removed gender selection radio buttons for child relation acceptance */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => {
+                    handleRejectRequest(request._id);
+                    setSelectedRequestId(null);
+                    setSelectedGender("none");
+                  }}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Decline
+                </Button>
+                <Button 
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    setSelectedRequestId(request._id);
+                    handleAcceptRequest(request._id);
+                  }}
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Accept
+                </Button>
+              </div>
+            </div>
                   </div>
                 ))}
               </div>

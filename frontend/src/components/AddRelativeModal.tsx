@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -11,16 +11,16 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "./ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import api from '@/services/api';
-import { useToast } from "@/hooks/use-toast";
+} from "./ui/select";
+import api from "../services/api";
+import { useToast } from "../hooks/use-toast";
 
 const RELATIONS = ["mother", "father", "sibling", "spouse", "child"];
 
@@ -34,10 +34,11 @@ interface UserSuggestion {
 interface FormData {
   username: string;
   userId: string;
-  fullName: string;
   relation: string;
   nickname: string;
   description: string;
+  gender?: string;
+  connectWithoutReciprocating?: boolean;
 }
 
 interface AddRelativeModalProps {
@@ -57,10 +58,11 @@ export const AddRelativeModal: React.FC<AddRelativeModalProps> = ({
   const [formData, setFormData] = useState<FormData>({
     username: "",
     userId: "",
-    fullName: "",
     relation: selectedRelation || "mother",
     nickname: "",
-    description: ""
+    description: "",
+    gender: "",
+    connectWithoutReciprocating: false
   });
   const [suggestions, setSuggestions] = useState<UserSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -98,15 +100,18 @@ export const AddRelativeModal: React.FC<AddRelativeModalProps> = ({
     setFormData(prev => ({
       ...prev,
       username: user.username,
-      userId: user._id,
-      fullName: user.fullName || ""
+      userId: user._id
     }));
     setShowSuggestions(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,32 +126,29 @@ export const AddRelativeModal: React.FC<AddRelativeModalProps> = ({
       const response = await api.post("/api/connections", {
         relationType: formData.relation,
         toUser: formData.userId || undefined,
-        fullName: formData.fullName || undefined,
         nickname: formData.nickname,
         description: formData.description,
-        isPlaceholder: !formData.userId
+        isPlaceholder: !formData.userId,
+        gender: formData.gender,
+        connectWithoutReciprocating: formData.connectWithoutReciprocating
       });
       
-      // Create a data object with the response data
       const relativeData = {
         id: response.data.relation?._id || `temp-${Date.now()}`,
         username: formData.username,
         userId: formData.userId,
-        fullName: formData.fullName,
         relation: formData.relation,
         nickname: formData.nickname,
         description: formData.description,
         profilePicture: response.data.relation?.toUser?.profilePicture
       };
       
-      // Call onAddRelative to update the parent component
       onAddRelative(relativeData);
       
-      // Show a toast for feedback
       if (formData.userId) {
         toast({
           title: "Request Sent!",
-          description: `Connection request sent to ${formData.fullName || formData.username}`,
+          description: `Connection request sent to ${formData.username}`,
         });
         onClose();
       } else {
@@ -197,6 +199,8 @@ export const AddRelativeModal: React.FC<AddRelativeModalProps> = ({
             </Select>
           </div>
 
+          {/* Removed radio buttons for gender selection when relation is 'child' */}
+
           <div className="space-y-2 relative">
             <Label htmlFor="username">Username (optional)</Label>
             <Input
@@ -238,20 +242,6 @@ export const AddRelativeModal: React.FC<AddRelativeModalProps> = ({
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fullName">
-              Full Name {!formData.username && <span className="text-red-500">*</span>}
-            </Label>
-            <Input
-              id="fullName"
-              name="fullName"
-              placeholder="Enter full name"
-              value={formData.fullName}
-              onChange={handleChange}
-              required={!formData.username}
-            />
           </div>
 
           <div className="space-y-2">

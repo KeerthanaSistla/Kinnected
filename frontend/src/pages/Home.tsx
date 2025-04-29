@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NodeGraph } from "@/components/NodeGraph";
-import { AddRelativeModal } from "@/components/AddRelativeModal";
-import { NavigationMenu } from "@/components/NavigationMenu";
-import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
-import api from '@/services/api';
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { NodeGraph } from "../components/NodeGraph";
+import { AddRelativeModal } from "../components/AddRelativeModal";
+import { NavigationMenu } from "../components/NavigationMenu";
+import { useToast } from "../hooks/use-toast";
+import api from "../services/api";
 
 type RelationType = "mother" | "father" | "sibling" | "spouse" | "child";
 
@@ -63,10 +62,15 @@ const Home = () => {
     fetchConnections();
   }, [navigate]);
 
-  const fetchConnections = async () => {
+  const fetchConnections = async (userId?: string) => {
     try {
-      const response = await api.get('/api/connections/relations');
-      const relations = response.data.relations || [];
+      let response;
+      if (userId) {
+        response = await api.get(`/api/connections/relations?userId=${userId}`);
+      } else {
+        response = await api.get('/api/connections/relations');
+      }
+      const relations = response.data?.relations || response.relations || [];
 
       const newConnections: Connections = {
         siblings: [],
@@ -116,6 +120,16 @@ const Home = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleNodeClick = (node: any) => {
+    setCurrentUser({
+      id: node.id,
+      username: node.username,
+      fullName: node.fullName,
+      profilePicture: node.profilePicture
+    });
+    fetchConnections(node.id);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -272,6 +286,7 @@ const Home = () => {
               setSelectedRelation(relation);
               setShowAddRelative(true);
             }}
+            onNodeClick={handleNodeClick}
           />
         </div>
       </main>

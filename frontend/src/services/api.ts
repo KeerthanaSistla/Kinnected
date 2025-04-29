@@ -8,7 +8,6 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to add the token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -17,12 +16,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Add a response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
       localStorage.removeItem('token');
       localStorage.removeItem('kinnected_user');
       localStorage.removeItem('kinnected_isLoggedIn');
@@ -31,5 +28,10 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const getUserRelations = async (userId: string) => {
+  const response = await api.get(`/api/connections/relations/${userId}`);
+  return response.data;
+};
 
 export default api;
