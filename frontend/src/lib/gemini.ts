@@ -1,26 +1,29 @@
+import api from '@/services/api';
+
 export async function generateGeminiResponse(message: string): Promise<string> {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
+    console.log('Sending message to AI:', message);
+
+    const response = await api.post('/api/ai/query', { 
+      query: message 
     });
 
-    if (!res.ok) {
-      // If the server responded with an error status
-      throw new Error(`Server error: ${res.status}`);
+    if (response.data.success && response.data.response) {
+      return response.data.response;
     }
 
-    const data = await res.json();
-
-    // Check if the response contains the expected data
-    if (!data || !data.reply) {
-      throw new Error('No valid reply found in the response');
+    throw new Error(response.data.message || 'Invalid response from AI service');
+  } catch (error: any) {
+    console.error('AI service error:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      return 'Error: Please log in again to use the AI service.';
     }
 
-    return data.reply || "Sorry, I didn't understand that.";
-  } catch (error) {
-    console.error("Gemini chatbot error:", error);
-    return "Oops, something went wrong.";
+    const errorMessage = error.response?.data?.message || 
+                        error.message || 
+                        'Failed to connect to AI service';
+    
+    return `Error: ${errorMessage}`;
   }
 }

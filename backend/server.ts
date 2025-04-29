@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
+// Load environment variables first
+dotenv.config();
+
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import helmet from 'helmet';
 
 // Route imports
@@ -14,8 +17,6 @@ import aiRoutes from './routes/ai';
 // Middleware imports
 import { apiLimiter, authLimiter, aiLimiter } from './middleware/rateLimiter';
 import { CustomError } from './utils/errors';
-
-dotenv.config();
 
 // Create Express app
 const app = express();
@@ -106,17 +107,28 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   
   // Handle other errors
   console.log('Other error:', err.message);
+  
+  // For Gemini API errors, return a more specific error message
+  if (err.message && err.message.includes('GoogleGenerativeAI')) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+      details: err.errorDetails || 'Error with Gemini API'
+    });
+  }
+  
   res.status(500).json({
     success: false,
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
+    details: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://kinnected:kinnected@cluster0.8j8j8j8.mongodb.net/kinnected?retryWrites=true&w=majority';
 
-// Start server
-const PORT = process.env.PORT || 5000;
+// Start server with enhanced error handling and port fallback
+const PORT = Number(process.env.PORT) || 5000;
 const startServer = async () => {
   try {
     console.log('Attempting to connect to MongoDB...');
@@ -124,12 +136,23 @@ const startServer = async () => {
     console.log('✅ Connected to MongoDB successfully');
     console.log('MongoDB URI:', MONGODB_URI);
     
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
+    }).on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        const nextPort = PORT + 1;
+        console.log(`Port ${PORT} is busy, trying ${nextPort}...`);
+        app.listen(nextPort, () => {
+          console.log(`🚀 Server is running on port ${nextPort}`);
+          console.log(`📡 API Base URL: http://localhost:${nextPort}/api`);
+        });
+      } else {
+        throw err;
+      }
     });
-  } catch (error) {
-    console.error('Failed to start server:', error);
+  } catch (error: any) {
+    console.error('Failed to start server:', error.message);
     process.exit(1);
   }
 };
