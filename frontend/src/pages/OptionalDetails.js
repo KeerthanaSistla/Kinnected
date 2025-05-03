@@ -71,4 +71,4 @@ const OptionalDetails = () => {
   );
 };
 
-export default OptionalDetails; 
+export default OptionalDetails;

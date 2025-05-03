@@ -13,10 +13,21 @@ interface INode {
   id: string;
   username: string;
   fullName: string;
-  relation?: RelationType;
+  relation?: string; // changed from RelationType to string to fix type conflict
   nickname?: string;
   description?: string;
   status: NodeStatus;
+  profilePicture?: string;
+}
+
+// Define relative data structure for onAddRelative callback
+interface RelativeData {
+  id: string;
+  username: string;
+  userId?: string;
+  relation: string;
+  nickname?: string;
+  description?: string;
   profilePicture?: string;
 }
 
@@ -113,9 +124,19 @@ const Node: React.FC<NodeProps> = ({ node, isCenter = false, onClick, onAddClick
   );
 };
 
+interface RelativeData {
+  id: string;
+  username: string;
+  userId?: string;
+  relation: string;
+  nickname?: string;
+  description?: string;
+  profilePicture?: string;
+}
+
 interface NodeGraphProps {
   currentUser: any;
-  onAddRelative: (relation: RelationType) => void;
+  onAddRelative: (data: RelativeData) => void;
   connections: {
     mother?: INode;
     father?: INode;
@@ -144,6 +165,9 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
 
   // State to hold connections for the centered node
   const [connections, setConnections] = useState(initialConnections);
+
+  // State to track if central node profile box is open
+  const [showCenterProfile, setShowCenterProfile] = useState(false);
 
   // Fetch connections when centeredNodeId changes
   useEffect(() => {
@@ -205,6 +229,20 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
     fetchConnections();
   }, [centeredNodeId, toast]);
 
+  // Handler to convert FormData from AddRelativeModal to RelativeData and call parent's onAddRelative
+  const handleAddRelativeFromModal = (data: any) => {
+    const relativeData: RelativeData = {
+      id: `temp-${Date.now()}`,
+      username: data.username,
+      userId: data.userId,
+      relation: data.relation,
+      nickname: data.nickname,
+      description: data.description,
+      profilePicture: undefined
+    };
+    onAddRelative(relativeData);
+  };
+
   // Create base nodes with proper positioning
   const getBaseNodes = () => {
     const nodes = {
@@ -230,30 +268,35 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
       mother: { ...nodes.mother, onAddClick: addButton(nodes.mother, "mother"), onClick: () => {
         if(nodes.mother.status !== "empty") {
           setCenteredNodeId(nodes.mother.id);
+          setShowCenterProfile(false);
           onNodeClick?.(nodes.mother);
         }
       }},
       father: { ...nodes.father, onAddClick: addButton(nodes.father, "father"), onClick: () => {
         if(nodes.father.status !== "empty") {
           setCenteredNodeId(nodes.father.id);
+          setShowCenterProfile(false);
           onNodeClick?.(nodes.father);
         }
       }},
       sibling: { ...nodes.sibling, onAddClick: addButton(nodes.sibling, "sibling"), onClick: () => {
         if(nodes.sibling.status !== "empty") {
           setCenteredNodeId(nodes.sibling.id);
+          setShowCenterProfile(false);
           onNodeClick?.(nodes.sibling);
         }
       }},
       spouse: { ...nodes.spouse, onAddClick: addButton(nodes.spouse, "spouse"), onClick: () => {
         if(nodes.spouse.status !== "empty") {
           setCenteredNodeId(nodes.spouse.id);
+          setShowCenterProfile(false);
           onNodeClick?.(nodes.spouse);
         }
       }},
       child: { ...nodes.child, onAddClick: addButton(nodes.child, "child"), onClick: () => {
         if(nodes.child.status !== "empty") {
           setCenteredNodeId(nodes.child.id);
+          setShowCenterProfile(false);
           onNodeClick?.(nodes.child);
         }
       }}
@@ -323,6 +366,45 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
     profilePicture: currentUser.profilePicture
   };
 
+  // Calculate profile box dimensions based on window size and 75% coverage
+  const [profileBoxStyle, setProfileBoxStyle] = useState<React.CSSProperties>({});
+
+  useEffect(() => {
+    const updateProfileBoxStyle = () => {
+      const width = window.innerWidth * 0.75;
+      const height = window.innerHeight * 0.75;
+      const aspectRatio = window.innerWidth / window.innerHeight;
+
+      let boxWidth = width;
+      let boxHeight = height;
+
+      // Adjust box dimensions to maintain aspect ratio
+      if (boxWidth / boxHeight > aspectRatio) {
+        boxWidth = boxHeight * aspectRatio;
+      } else {
+        boxHeight = boxWidth / aspectRatio;
+      }
+
+      setProfileBoxStyle({
+        width: boxWidth,
+        height: boxHeight,
+        position: "fixed",
+        top: `calc(50% - ${boxHeight / 2}px)`,
+        left: `calc(50% - ${boxWidth / 2}px)`,
+        backgroundColor: "white",
+        boxShadow: "0 0 15px 5px #5cab79",
+        borderRadius: "12px",
+        padding: "20px",
+        zIndex: 1000,
+        overflowY: "auto"
+      });
+    };
+
+    updateProfileBoxStyle();
+    window.addEventListener("resize", updateProfileBoxStyle);
+    return () => window.removeEventListener("resize", updateProfileBoxStyle);
+  }, []);
+
   return (
     <div className="relative w-full h-full min-h-[500px] rounded-xl shadow-sm p-4 flex items-center justify-center" style={{ backgroundColor: "#dcfce7" }}>
       <svg ref={svgRef} className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -359,6 +441,7 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
           <Node
             node={centerNode}
             isCenter={true}
+            onClick={() => setShowCenterProfile(!showCenterProfile)}
             onAddClick={() => {
               setSelectedRelation(null);
               setShowAddRelativeModal(true);
@@ -384,6 +467,24 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         </div>
       </div>
 
+      {showCenterProfile && (
+        <div style={profileBoxStyle} onClick={(e) => e.stopPropagation()}>
+          <h2 className="text-2xl font-bold mb-4">Profile</h2>
+          <div className="space-y-2">
+            <div><strong>Username:</strong> {currentUser.username}</div>
+            <div><strong>Full Name:</strong> {currentUser.fullName}</div>
+            {currentUser.phone && <div><strong>Phone:</strong> {currentUser.phone}</div>}
+            {currentUser.email && <div><strong>Email:</strong> {currentUser.email}</div>}
+          </div>
+          <button
+            className="mt-4 px-4 py-2 bg-[#5cab79] text-white rounded hover:bg-[#4a8a62]"
+            onClick={() => setShowCenterProfile(false)}
+          >
+            Close
+          </button>
+        </div>
+      )}
+
       {showAddRelativeModal && (
         <AddRelativeModal
           onClose={() => {
@@ -394,7 +495,7 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
           selectedRelation={selectedRelation || undefined}
           onAddRelative={(data) => {
             setShowAddRelativeModal(false);
-            onAddRelative(data.relation as RelationType);
+            handleAddRelativeFromModal(data);
             // Refresh connections after adding relative
             getUserRelations(centeredNodeId).then(data => {
               if (data && data.relations) {

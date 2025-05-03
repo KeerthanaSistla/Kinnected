@@ -45,20 +45,17 @@ const Home = () => {
   });
 
   useEffect(() => {
-    // Check if user is logged in
     const isLoggedIn = localStorage.getItem("kinnected_isLoggedIn") === "true";
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
     
-    // Get user data
     const userData = localStorage.getItem("kinnected_user");
     if (userData) {
       setCurrentUser(JSON.parse(userData));
     }
 
-    // Fetch user's connections
     fetchConnections();
   }, [navigate]);
 
@@ -77,7 +74,6 @@ const Home = () => {
         children: []
       };
 
-      // Process each relation
       relations.forEach((relation: any) => {
         const connectionData: Connection = {
           id: relation._id,
@@ -91,7 +87,6 @@ const Home = () => {
           profilePicture: relation.toUser?.profilePicture
         };
 
-        // Add to appropriate category
         switch (relation.relationType) {
           case 'mother':
             newConnections.mother = connectionData;
@@ -138,7 +133,6 @@ const Home = () => {
       title: `${searchType === "relations" ? "Searching relations" : "Searching for relations"}`,
       description: `Searching for "${searchQuery}"...`,
     });
-    // Implement search functionality
   };
   
   const handleLogout = () => {
@@ -148,11 +142,8 @@ const Home = () => {
 
   const handleAddRelative = async (data: any) => {
     try {
-      console.log("Adding relative with data:", data);
-      
-      // Create a new connection object based on the added relative
       const newConnection: Connection = {
-        id: data.id || `temp-${Date.now()}`, // Use a temporary ID if not provided
+        id: data.id || `temp-${Date.now()}`,
         username: data.username || "",
         fullName: data.fullName || "",
         relation: data.relation as RelationType,
@@ -162,20 +153,13 @@ const Home = () => {
         profilePicture: data.profilePicture
       };
       
-      console.log("Created new connection:", newConnection);
-      
-      // Update the connections state directly
       setConnections(prevConnections => {
-        console.log("Previous connections:", prevConnections);
-        
-        // Create a deep copy of the previous connections
         const updatedConnections = {
           ...prevConnections,
           siblings: [...(prevConnections.siblings || [])],
           children: [...(prevConnections.children || [])]
         };
         
-        // Add the new connection to the appropriate category
         switch (data.relation) {
           case 'mother':
             updatedConnections.mother = newConnection;
@@ -184,7 +168,6 @@ const Home = () => {
             updatedConnections.father = newConnection;
             break;
           case 'sibling':
-            // For siblings, we need to check if it already exists
             if (!updatedConnections.siblings.some(s => s.id === newConnection.id)) {
               updatedConnections.siblings = [...updatedConnections.siblings, newConnection];
             }
@@ -193,18 +176,15 @@ const Home = () => {
             updatedConnections.spouse = newConnection;
             break;
           case 'child':
-            // For children, we need to check if it already exists
             if (!updatedConnections.children.some(c => c.id === newConnection.id)) {
               updatedConnections.children = [...updatedConnections.children, newConnection];
             }
             break;
         }
         
-        console.log("Updated connections:", updatedConnections);
         return updatedConnections;
       });
       
-      // Fetch the latest connections in the background to ensure data consistency
       fetchConnections().catch(error => {
         console.error("Error fetching updated connections:", error);
       });
@@ -227,7 +207,6 @@ const Home = () => {
   
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Top Navigation Bar */}
       <header className="bg-[#f7f0e2] border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -267,9 +246,7 @@ const Home = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 flex relative">
-        {/* Side Navigation */}
         <NavigationMenu 
           isOpen={isMenuOpen} 
           onClose={() => setIsMenuOpen(false)} 
@@ -277,13 +254,12 @@ const Home = () => {
           onLogout={handleLogout} 
         />
         
-        {/* Node Graph Area */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8">
           <NodeGraph 
             currentUser={currentUser}
             connections={connections}
-            onAddRelative={(relation) => {
-              setSelectedRelation(relation);
+            onAddRelative={(data: any) => {
+              setSelectedRelation(data.relation);
               setShowAddRelative(true);
             }}
             onNodeClick={handleNodeClick}
@@ -291,7 +267,6 @@ const Home = () => {
         </div>
       </main>
       
-      {/* Add Relative Modal */}
       {showAddRelative && selectedRelation && (
         <AddRelativeModal
           onClose={() => {
