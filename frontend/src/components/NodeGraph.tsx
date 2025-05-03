@@ -83,7 +83,7 @@ const Node: React.FC<NodeProps> = ({ node, isCenter = false, onClick, onAddClick
       onClick={node.status !== "empty" ? onClick : undefined}
     >
       <div 
-        className={`${isCenter ? "w-28 h-28" : "w-20 h-20"} rounded-full flex items-center justify-center ${getBorderStyle()} ${getBgStyle()} shadow-sm`}
+        className={`${isCenter ? "w-24 h-24 sm:w-28 sm:h-28" : "w-16 h-16 sm:w-20 sm:h-20"} rounded-full flex items-center justify-center ${getBorderStyle()} ${getBgStyle()} shadow-sm`}
       >
         {node.profilePicture ? (
           <img
@@ -355,49 +355,58 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
 
   // Draw connecting lines
   useEffect(() => {
-    if (!svgRef.current || !centerNodeRef.current) return;
+    const drawLines = () => {
+      if (!svgRef.current || !centerNodeRef.current) return;
 
-    // Clear previous lines
-    while (svgRef.current.firstChild) {
-      svgRef.current.removeChild(svgRef.current.firstChild);
-    }
-
-    const centerRect = centerNodeRef.current.getBoundingClientRect();
-    const svgRect = svgRef.current.getBoundingClientRect();
-
-    const centerX = centerRect.left + centerRect.width / 2 - svgRect.left;
-    const centerY = centerRect.top + centerRect.height / 2 - svgRect.top;
-
-    // Draw lines to each connection
-    Object.entries(nodeRefs.current).forEach(([relation, nodeRef]) => {
-      if (!nodeRef) return;
-
-      const nodeRect = nodeRef.getBoundingClientRect();
-      const nodeX = nodeRect.left + nodeRect.width / 2 - svgRect.left;
-      const nodeY = nodeRect.top + nodeRect.height / 2 - svgRect.top;
-
-      const node = baseNodes[relation as keyof ReturnType<typeof getBaseNodes>];
-      if (!node) return; // Skip if node is undefined
-
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', centerX.toString());
-      line.setAttribute('y1', centerY.toString());
-      line.setAttribute('x2', nodeX.toString());
-      line.setAttribute('y2', nodeY.toString());
-
-      // Line style based on node status
-      if (node.status === "empty") {
-        line.setAttribute('stroke', '#743a10');
-        line.setAttribute('stroke-width', '2');
-        line.setAttribute('stroke-dasharray', '5,5');
-      } else {
-        line.setAttribute('stroke', '#743a10');
-        line.setAttribute('stroke-width', '2');
-        line.removeAttribute('stroke-dasharray');
+      // Clear previous lines
+      while (svgRef.current.firstChild) {
+        svgRef.current.removeChild(svgRef.current.firstChild);
       }
 
-      svgRef.current.appendChild(line);
-    });
+      const centerRect = centerNodeRef.current.getBoundingClientRect();
+      const svgRect = svgRef.current.getBoundingClientRect();
+
+      const centerX = centerRect.left + centerRect.width / 2 - svgRect.left;
+      const centerY = centerRect.top + centerRect.height / 2 - svgRect.top;
+
+      // Draw lines to each connection
+      Object.entries(nodeRefs.current).forEach(([relation, nodeRef]) => {
+        if (!nodeRef) return;
+
+        const nodeRect = nodeRef.getBoundingClientRect();
+        const nodeX = nodeRect.left + nodeRect.width / 2 - svgRect.left;
+        const nodeY = nodeRect.top + nodeRect.height / 2 - svgRect.top;
+
+        const node = baseNodes[relation as keyof ReturnType<typeof getBaseNodes>];
+        if (!node) return; // Skip if node is undefined
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', centerX.toString());
+        line.setAttribute('y1', centerY.toString());
+        line.setAttribute('x2', nodeX.toString());
+        line.setAttribute('y2', nodeY.toString());
+
+        // Line style based on node status
+        if (node.status === "empty") {
+          line.setAttribute('stroke', '#743a10');
+          line.setAttribute('stroke-width', '2');
+          line.setAttribute('stroke-dasharray', '5,5');
+        } else {
+          line.setAttribute('stroke', '#743a10');
+          line.setAttribute('stroke-width', '2');
+          line.removeAttribute('stroke-dasharray');
+        }
+
+        svgRef.current.appendChild(line);
+      });
+    };
+
+    drawLines();
+
+    window.addEventListener('resize', drawLines);
+    return () => {
+      window.removeEventListener('resize', drawLines);
+    };
   }, [baseNodes]);
 
   const centerNode: INode = {
@@ -438,7 +447,11 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         borderRadius: "12px",
         padding: "20px",
         zIndex: 1000,
-        overflowY: "auto"
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center"
       });
     };
 
@@ -453,16 +466,16 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         {/* Lines will be dynamically rendered here */}
       </svg>
 
-      <div className="relative grid grid-cols-5 gap-16 p-8 items-center">
+      <div className="relative grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-8 md:gap-16 p-2 sm:p-8 items-center">
         {/* Top row (Mother, Father) */}
-        <div className="col-start-2 col-span-1 flex justify-end -mt-6" ref={el => nodeRefs.current['mother'] = el}>
+        <div className="col-start-2 col-span-1 flex justify-end -mt-3 sm:-mt-6" ref={el => nodeRefs.current['mother'] = el}>
           <Node
             node={baseNodes.mother}
             onClick={baseNodes.mother?.onClick}
             onAddClick={baseNodes.mother?.onAddClick}
           />
         </div>
-        <div className="col-start-4 col-span-1 flex justify-start -mt-6" ref={el => nodeRefs.current['father'] = el}>
+        <div className="col-start-4 col-span-1 flex justify-start -mt-3 sm:-mt-6" ref={el => nodeRefs.current['father'] = el}>
           <Node
             node={baseNodes.father}
             onClick={baseNodes.father?.onClick}
@@ -511,8 +524,8 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
 
       {showCenterProfile && (
         <div style={profileBoxStyle} onClick={(e) => e.stopPropagation()}>
-          <h2 className="text-2xl font-bold mb-4">Profile</h2>
-          <div className="space-y-2">
+          <h2 className="text-2xl font-bold mb-4 text-center">Profile</h2>
+          <div className="space-y-4 text-center">
             <div><strong>Username:</strong> {currentUser.username}</div>
             <div><strong>Full Name:</strong> {currentUser.fullName}</div>
             {currentUser.phone && <div><strong>Phone:</strong> {currentUser.phone}</div>}
