@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 const api = axios.create({
@@ -31,6 +32,23 @@ api.interceptors.response.use(
 
 export const getUserRelations = async (userId: string) => {
   const response = await api.get(`/api/connections/relations/${userId}`);
+  return response.data;
+};
+
+// New API calls for user settings/profile
+export const getUserProfile = async (username?: string) => {
+  const url = username ? `/api/users/profile/${username}` : '/api/users/profile';
+  const response = await api.get(url);
+  return response.data;
+};
+
+export const updateUserProfile = async (profileData: any) => {
+  const response = await api.put('/api/users/profile', profileData);
+  return response.data;
+};
+
+export const deleteUserAccount = async () => {
+  const response = await api.delete('/api/users/account');
   return response.data;
 };
 

@@ -3,7 +3,7 @@ import { IUser } from '../models/User';
 import User from '../models/User';
 import { NotFoundError, ValidationError } from '../utils/errors';
 
-type UpdateableUserFields = Pick<IUser, 'fullName' | 'email' | 'phoneNumber' | 'bio' | 'location' | 'profilePicture'>;
+type UpdateableUserFields = Pick<IUser, 'fullName' | 'email' | 'phoneNumber' | 'bio' | 'location' | 'profilePicture' | 'privacySettings' | 'familyTreePreferences' | 'notificationSettings' | 'relationManagementSettings' | 'appPreferences'>;
 
 // Get user profile
 export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
@@ -27,7 +27,7 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
 // Update user profile
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const allowedUpdates: (keyof UpdateableUserFields)[] = ['fullName', 'email', 'phoneNumber', 'bio', 'location', 'profilePicture'];
+    const allowedUpdates: (keyof UpdateableUserFields)[] = ['fullName', 'email', 'phoneNumber', 'bio', 'location', 'profilePicture', 'privacySettings', 'familyTreePreferences', 'notificationSettings', 'relationManagementSettings', 'appPreferences'];
     const updates = Object.keys(req.body) as (keyof UpdateableUserFields)[];
     
     // Validate update fields

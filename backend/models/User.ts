@@ -10,6 +10,42 @@ export interface IUser extends Document {
   bio?: string;
   location?: string;
   profilePicture?: string;
+
+  privacySettings?: {
+    profileVisibility: 'public' | 'private' | 'connections';
+    hideFromGlobalSearch: boolean;
+    blockList: string[]; // Array of User IDs
+  };
+
+  familyTreePreferences?: {
+    defaultCenterNode: 'self' | 'lastViewed';
+    showPlaceholderNodes: boolean;
+    animationSpeed: number;
+    enableAnimations: boolean;
+    nodeSize: number;
+    layoutStyle: 'standard' | 'compact';
+  };
+
+  notificationSettings?: {
+    inAppNotifications: boolean;
+    connectionRequestAlerts: boolean;
+    nicknameEditAlerts: boolean;
+  };
+
+  dataControls?: Record<string, unknown>;
+
+  relationManagementSettings?: {
+    manageSuggestedRelations: boolean;
+    allowOthersToSuggestRelations: boolean;
+    customRelationshipLabels: { key: string; label: string }[];
+  };
+
+  appPreferences?: {
+    theme: 'light' | 'dark' | 'custom';
+    fontSize: number;
+    defaultLandingPage: 'home' | 'profile' | 'tree';
+  };
+
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -59,6 +95,39 @@ const userSchema = new Schema<IUser>({
   },
   profilePicture: {
     type: String
+  },
+
+  // New settings fields
+  privacySettings: {
+    profileVisibility: { type: String, enum: ['public', 'private', 'connections'], default: 'public' },
+    hideFromGlobalSearch: { type: Boolean, default: false },
+    blockList: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+  },
+  familyTreePreferences: {
+    defaultCenterNode: { type: String, enum: ['self', 'lastViewed'], default: 'self' },
+    showPlaceholderNodes: { type: Boolean, default: true },
+    animationSpeed: { type: Number, default: 1 }, // 1x speed
+    enableAnimations: { type: Boolean, default: true },
+    nodeSize: { type: Number, default: 100 }, // example size
+    layoutStyle: { type: String, enum: ['standard', 'compact'], default: 'standard' }
+  },
+  notificationSettings: {
+    inAppNotifications: { type: Boolean, default: true },
+    connectionRequestAlerts: { type: Boolean, default: true },
+    nicknameEditAlerts: { type: Boolean, default: true }
+  },
+  dataControls: {
+    // No direct fields needed, handled via API
+  },
+  relationManagementSettings: {
+    manageSuggestedRelations: { type: Boolean, default: true },
+    allowOthersToSuggestRelations: { type: Boolean, default: true },
+    customRelationshipLabels: [{ key: String, label: String }]
+  },
+  appPreferences: {
+    theme: { type: String, enum: ['light', 'dark', 'custom'], default: 'light' },
+    fontSize: { type: Number, default: 14 },
+    defaultLandingPage: { type: String, enum: ['home', 'profile', 'tree'], default: 'home' }
   }
 }, {
   timestamps: true,
