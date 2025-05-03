@@ -169,8 +169,25 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
   // State to track if central node profile box is open
   const [showCenterProfile, setShowCenterProfile] = useState(false);
 
+  // Helper function to get dummy connections with default 5 dummy nodes
+  const getDummyConnections = () => {
+    return {
+      mother: EmptyNode("mother"),
+      father: EmptyNode("father"),
+      siblings: [EmptyNode("sibling")],
+      spouse: EmptyNode("spouse"),
+      children: [EmptyNode("child")]
+    };
+  };
+
   // Fetch connections when centeredNodeId changes
   useEffect(() => {
+    // If centeredNodeId corresponds to a placeholder node, set dummy connections and skip fetch
+    if (centeredNodeId.startsWith("placeholder-")) {
+      setConnections(getDummyConnections());
+      return;
+    }
+
     const fetchConnections = async () => {
       try {
         const data = await getUserRelations(centeredNodeId);
@@ -266,35 +283,60 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
 
     return {
       mother: { ...nodes.mother, onAddClick: addButton(nodes.mother, "mother"), onClick: () => {
-        if(nodes.mother.status !== "empty") {
+        if(nodes.mother.status === "placeholder") {
+          setCenteredNodeId(nodes.mother.id);
+          setConnections(getDummyConnections());
+          setShowCenterProfile(false);
+          onNodeClick?.(nodes.mother);
+        } else if(nodes.mother.status !== "empty") {
           setCenteredNodeId(nodes.mother.id);
           setShowCenterProfile(false);
           onNodeClick?.(nodes.mother);
         }
       }},
       father: { ...nodes.father, onAddClick: addButton(nodes.father, "father"), onClick: () => {
-        if(nodes.father.status !== "empty") {
+        if(nodes.father.status === "placeholder") {
+          setCenteredNodeId(nodes.father.id);
+          setConnections(getDummyConnections());
+          setShowCenterProfile(false);
+          onNodeClick?.(nodes.father);
+        } else if(nodes.father.status !== "empty") {
           setCenteredNodeId(nodes.father.id);
           setShowCenterProfile(false);
           onNodeClick?.(nodes.father);
         }
       }},
       sibling: { ...nodes.sibling, onAddClick: addButton(nodes.sibling, "sibling"), onClick: () => {
-        if(nodes.sibling.status !== "empty") {
+        if(nodes.sibling.status === "placeholder") {
+          setCenteredNodeId(nodes.sibling.id);
+          setConnections(getDummyConnections());
+          setShowCenterProfile(false);
+          onNodeClick?.(nodes.sibling);
+        } else if(nodes.sibling.status !== "empty") {
           setCenteredNodeId(nodes.sibling.id);
           setShowCenterProfile(false);
           onNodeClick?.(nodes.sibling);
         }
       }},
       spouse: { ...nodes.spouse, onAddClick: addButton(nodes.spouse, "spouse"), onClick: () => {
-        if(nodes.spouse.status !== "empty") {
+        if(nodes.spouse.status === "placeholder") {
+          setCenteredNodeId(nodes.spouse.id);
+          setConnections(getDummyConnections());
+          setShowCenterProfile(false);
+          onNodeClick?.(nodes.spouse);
+        } else if(nodes.spouse.status !== "empty") {
           setCenteredNodeId(nodes.spouse.id);
           setShowCenterProfile(false);
           onNodeClick?.(nodes.spouse);
         }
       }},
       child: { ...nodes.child, onAddClick: addButton(nodes.child, "child"), onClick: () => {
-        if(nodes.child.status !== "empty") {
+        if(nodes.child.status === "placeholder") {
+          setCenteredNodeId(nodes.child.id);
+          setConnections(getDummyConnections());
+          setShowCenterProfile(false);
+          onNodeClick?.(nodes.child);
+        } else if(nodes.child.status !== "empty") {
           setCenteredNodeId(nodes.child.id);
           setShowCenterProfile(false);
           onNodeClick?.(nodes.child);
