@@ -63,9 +63,7 @@ export function AIChatBot() {
     <div className="flex flex-col h-full bg-white">
       {/* Chat Header */}
       <div
-        className={`px-4 py-3 border-b bg-gradient-to-r from-orange-400 to-green-500 text-white transition-opacity duration-300 ${
-          fadeHeader ? "opacity-0 pointer-events-none" : "opacity-100"
-        }`}
+        className={`px-4 py-3 border-b bg-gradient-to-r from-orange-400 to-green-500 text-white transition-opacity duration-300`}
       >
         <h2 className="text-lg font-bold text-center">Kinnected AI</h2>
       </div>

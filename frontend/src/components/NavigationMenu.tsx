@@ -66,7 +66,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
               <ul className="space-y-2 px-4">
                 <li>
                   <Button 
-                    variant="ghost" 
+                    variant="kinnected" 
                     className="w-full justify-start" 
                     onClick={() => handleNavigation("/home")}
                   >
@@ -76,7 +76,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 </li>
                 <li>
                   <Button 
-                    variant="ghost" 
+                    variant="kinnected" 
                     className="w-full justify-start"
                     onClick={() => handleNavigation("/profile")}
                   >
@@ -86,7 +86,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 </li>
                 <li>
                   <Button 
-                    variant="ghost" 
+                    variant="kinnected" 
                     className="w-full justify-start"
                     onClick={() => handleNavigation("/requests")}
                   >
@@ -96,7 +96,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 </li>
                 <li>
                   <Button 
-                    variant="ghost" 
+                    variant="kinnected" 
                     className="w-full justify-start"
                     onClick={() => handleNavigation("/ai")}
                   >
@@ -106,7 +106,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 </li>
                 <li>
                   <Button 
-                    variant="ghost" 
+                    variant="kinnected" 
                     className="w-full justify-start"
                     onClick={() => handleNavigation("/settings")}
                   >

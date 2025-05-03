@@ -12,6 +12,7 @@ type NodeStatus = "empty" | "placeholder" | "pending" | "connected";
 interface INode {
   id: string;
   username: string;
+  name?: string;
   fullName: string;
   relation?: string; // changed from RelationType to string to fix type conflict
   nickname?: string;
@@ -166,8 +167,11 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
   // State to hold connections for the centered node
   const [connections, setConnections] = useState(initialConnections);
 
-  // State to track if central node profile box is open
-  const [showCenterProfile, setShowCenterProfile] = useState(false);
+  // State to track the selected node for profile display (central or relative)
+  const [selectedNode, setSelectedNode] = useState<INode | null>(null);
+
+  // State to track if profile box is open
+  const [showProfile, setShowProfile] = useState(false);
 
   // Helper function to get dummy connections with default 5 dummy nodes
   const getDummyConnections = () => {
@@ -206,16 +210,17 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
             if (relation.toUser?._id === centeredNodeId) {
               return;
             }
-            const node: INode = {
-              id: relation.toUser?._id || `placeholder-${relation._id}`,
-              username: relation.toUser?.username || "",
-              fullName: relation.fullName || "",
-              relation: relation.relationType,
-              nickname: relation.nickname,
-              description: relation.description,
-              status: relation.status === "accepted" ? "connected" : "pending",
-              profilePicture: relation.toUser?.profilePicture
-            };
+          const node: INode = {
+            id: relation.toUser?._id || `placeholder-${relation._id}`,
+            username: relation.toUser?.username || "",
+            name: relation.toUser?.name || relation.toUser?.fullName || "",
+            fullName: relation.toUser?.fullName || relation.fullName || "",
+            relation: relation.relationType,
+            nickname: relation.nickname,
+            description: relation.description,
+            status: relation.status === "accepted" ? "connected" : "pending",
+            profilePicture: relation.toUser?.profilePicture
+          };
 
             switch (relation.relationType) {
               case "mother":
@@ -286,11 +291,11 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         if(nodes.mother.status === "placeholder") {
           setCenteredNodeId(nodes.mother.id);
           setConnections(getDummyConnections());
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.mother);
         } else if(nodes.mother.status !== "empty") {
           setCenteredNodeId(nodes.mother.id);
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.mother);
         }
       }},
@@ -298,11 +303,11 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         if(nodes.father.status === "placeholder") {
           setCenteredNodeId(nodes.father.id);
           setConnections(getDummyConnections());
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.father);
         } else if(nodes.father.status !== "empty") {
           setCenteredNodeId(nodes.father.id);
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.father);
         }
       }},
@@ -310,11 +315,11 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         if(nodes.sibling.status === "placeholder") {
           setCenteredNodeId(nodes.sibling.id);
           setConnections(getDummyConnections());
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.sibling);
         } else if(nodes.sibling.status !== "empty") {
           setCenteredNodeId(nodes.sibling.id);
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.sibling);
         }
       }},
@@ -322,11 +327,11 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         if(nodes.spouse.status === "placeholder") {
           setCenteredNodeId(nodes.spouse.id);
           setConnections(getDummyConnections());
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.spouse);
         } else if(nodes.spouse.status !== "empty") {
           setCenteredNodeId(nodes.spouse.id);
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.spouse);
         }
       }},
@@ -334,11 +339,11 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         if(nodes.child.status === "placeholder") {
           setCenteredNodeId(nodes.child.id);
           setConnections(getDummyConnections());
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.child);
         } else if(nodes.child.status !== "empty") {
           setCenteredNodeId(nodes.child.id);
-          setShowCenterProfile(false);
+          setShowProfile(false);
           onNodeClick?.(nodes.child);
         }
       }}
@@ -471,14 +476,26 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         <div className="col-start-2 col-span-1 flex justify-end -mt-3 sm:-mt-6" ref={el => nodeRefs.current['mother'] = el}>
           <Node
             node={baseNodes.mother}
-            onClick={baseNodes.mother?.onClick}
+            onClick={() => {
+              if (baseNodes.mother.status !== "empty") {
+                setSelectedNode(baseNodes.mother);
+                setShowProfile(true);
+              }
+              baseNodes.mother.onClick && baseNodes.mother.onClick();
+            }}
             onAddClick={baseNodes.mother?.onAddClick}
           />
         </div>
         <div className="col-start-4 col-span-1 flex justify-start -mt-3 sm:-mt-6" ref={el => nodeRefs.current['father'] = el}>
           <Node
             node={baseNodes.father}
-            onClick={baseNodes.father?.onClick}
+            onClick={() => {
+              if (baseNodes.father.status !== "empty") {
+                setSelectedNode(baseNodes.father);
+                setShowProfile(true);
+              }
+              baseNodes.father.onClick && baseNodes.father.onClick();
+            }}
             onAddClick={baseNodes.father?.onAddClick}
           />
         </div>
@@ -487,7 +504,13 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         <div className="col-start-1 col-span-1 flex justify-center" ref={el => nodeRefs.current['sibling'] = el}>
           <Node
             node={baseNodes.sibling}
-            onClick={baseNodes.sibling?.onClick}
+            onClick={() => {
+              if (baseNodes.sibling.status !== "empty") {
+                setSelectedNode(baseNodes.sibling);
+                setShowProfile(true);
+              }
+              baseNodes.sibling.onClick && baseNodes.sibling.onClick();
+            }}
             onAddClick={baseNodes.sibling?.onAddClick}
           />
         </div>
@@ -496,7 +519,10 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
           <Node
             node={centerNode}
             isCenter={true}
-            onClick={() => setShowCenterProfile(!showCenterProfile)}
+            onClick={() => {
+              setSelectedNode(centerNode);
+              setShowProfile(true);
+            }}
             onAddClick={() => {
               setSelectedRelation(null);
               setShowAddRelativeModal(true);
@@ -507,7 +533,13 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         <div className="col-start-5 col-span-1 flex justify-center" ref={el => nodeRefs.current['spouse'] = el}>
           <Node
             node={baseNodes.spouse}
-            onClick={baseNodes.spouse?.onClick}
+            onClick={() => {
+              if (baseNodes.spouse.status !== "empty") {
+                setSelectedNode(baseNodes.spouse);
+                setShowProfile(true);
+              }
+              baseNodes.spouse.onClick && baseNodes.spouse.onClick();
+            }}
             onAddClick={baseNodes.spouse?.onAddClick}
           />
         </div>
@@ -516,24 +548,35 @@ export const NodeGraph: React.FC<NodeGraphProps> = ({
         <div className="col-start-3 col-span-1 flex justify-center mt-6" ref={el => nodeRefs.current['child'] = el}>
           <Node
             node={baseNodes.child}
-            onClick={baseNodes.child?.onClick}
+            onClick={() => {
+              if (baseNodes.child.status !== "empty") {
+                setSelectedNode(baseNodes.child);
+                setShowProfile(true);
+              }
+              baseNodes.child.onClick && baseNodes.child.onClick();
+            }}
             onAddClick={baseNodes.child?.onAddClick}
           />
         </div>
       </div>
 
-      {showCenterProfile && (
+      {showProfile && selectedNode && (
         <div style={profileBoxStyle} onClick={(e) => e.stopPropagation()}>
           <h2 className="text-2xl font-bold mb-4 text-center">Profile</h2>
           <div className="space-y-4 text-center">
-            <div><strong>Username:</strong> {currentUser.username}</div>
-            <div><strong>Full Name:</strong> {currentUser.fullName}</div>
-            {currentUser.phone && <div><strong>Phone:</strong> {currentUser.phone}</div>}
-            {currentUser.email && <div><strong>Email:</strong> {currentUser.email}</div>}
+            {selectedNode.username && (
+              <div><strong>Username:</strong> {selectedNode.username}</div>
+            )}
+            {selectedNode.nickname && (
+              <div><strong>Nickname:</strong> {selectedNode.nickname}</div>
+            )}
+            <div><strong>Full Name:</strong> {selectedNode.name ?? selectedNode.fullName}</div>
+            {/* Optionally show other details if available */}
+            {selectedNode.description && <div><strong>Description:</strong> {selectedNode.description}</div>}
           </div>
           <button
             className="mt-4 px-4 py-2 bg-[#5cab79] text-white rounded hover:bg-[#4a8a62]"
-            onClick={() => setShowCenterProfile(false)}
+            onClick={() => setShowProfile(false)}
           >
             Close
           </button>

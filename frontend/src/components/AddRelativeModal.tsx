@@ -191,15 +191,30 @@ export const AddRelativeModal: React.FC<AddRelativeModalProps> = ({
               <SelectTrigger id="relation">
                 <SelectValue placeholder="Select relationship type" />
               </SelectTrigger>
-              <SelectContent>
+
+              <SelectContent className="bg-[#dcfce7] text-white border-none">
                 {RELATIONS.map(r => (
-                  <SelectItem key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</SelectItem>
+                  <SelectItem
+                    key={r}
+                    value={r}
+                    className="
+                      bg-transparent 
+                      bg-[#dcfce7]
+                      text-[#24c45c] 
+                      hover:!text-white 
+                      hover:!bg-[#24c45c] 
+                      data-[state=checked]:bg-[#dcfce7] 
+                      data-[state=checked]:text-[#24c45c] 
+                      data-[state=checked]:font-semibold 
+                      border-none
+                    "
+                  >
+                    {r.charAt(0).toUpperCase() + r.slice(1)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Removed radio buttons for gender selection when relation is 'child' */}
 
           <div className="space-y-2 relative">
             <Label htmlFor="username">Username (optional)</Label>

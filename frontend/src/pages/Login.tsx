@@ -64,7 +64,6 @@ const Login = () => {
       if (error.response?.status === 429) {
         setError("Too many attempts. Please wait a moment and try again.");
       } else if (error.response?.data?.errors) {
-        // Handle field-specific errors
         const errors = error.response.data.errors;
         if (errors.username) {
           setError(errors.username);
