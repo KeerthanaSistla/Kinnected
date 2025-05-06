@@ -9,16 +9,16 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 to-blue-50">
       {/* Hero Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12 text-center">
-      <div className="flex items-center justify-center mb-6">
-        <img src="/logo.png" alt="Kinnected Logo" className="h-20 w-20" />
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#ea591a] to-green-600 bg-clip-text text-transparent -ml-3 translate-y-2">
+      <div className="flex items-center justify-center mb-1 -ml-6">
+        <img src="/logo.png" alt="Kinnected Logo" className="h-40 w-40" />
+        <h1 className="text-7xl font-bold bg-gradient-to-r from-[#ea591a] to-[#3a975c] bg-clip-text text-transparent -ml-6 translate-y-4">
           innected
         </h1>
       </div>
 
         
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Visualize and explore your family connections
+        Reuniting Families, One Node at a Time
         </h2>
         
         <p className="text-lg text-gray-600 max-w-2xl mb-8">
@@ -70,8 +70,8 @@ const Index = () => {
       </div>
       
       {/* Footer */}
-      <footer className="py-6 text-center text-gray-600 bg-gray-50">
-        <p>© 2025 Kinnected. All rights reserved.</p>
+      <footer className="py-6 text-left p-5 text-gray-600 bg-gray-50">
+        <p>© Kinnected</p>
       </footer>
     </div>
   );

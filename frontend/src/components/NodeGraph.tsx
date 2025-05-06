@@ -117,7 +117,7 @@ const Node: React.FC<NodeProps> = ({ node, isCenter = false, onClick, onAddClick
         <div className="mt-1 text-xs text-gray-600">
           {node.relation}
           {node.status === "pending" && (
-            <span className="ml-1 text-yellow-600">(Pending)</span>
+            <span className="ml-1 text-[#c57317]">(Pending)</span>
           )}
         </div>
       )}

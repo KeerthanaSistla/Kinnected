@@ -226,7 +226,7 @@ const Home = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   <select
-                    className="ml-2 bg-muted text-muted-foreground text-sm px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-0 focus:border border-border"
+                    className="ml-2 bg-muted text-muted-foreground !bg-[#dcfce7] text-sm px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-0 focus:border border-border"
                     onChange={(e) => setSearchType(e.target.value as "relations" | "general")}
                     value={searchType}
                   >
