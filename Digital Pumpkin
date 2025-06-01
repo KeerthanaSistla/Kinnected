@@ -1,0 +1,65 @@
+Kinnected has been an incredible learning experience. From understanding complex family structures to implementing the technology behind them, the journey of building this MERN stack application has taught me a great deal. I learned how to use React, TypeScript, and Tailwind CSS to craft an interactive and accessible UI, and how to build a secure, scalable backend using Node.js, Express, and MongoDB. I also integrated Gemini (via @google/generative-ai) to power a conversational chatbot that enhances the platform’s interactivity.
+
+Bringing an idea to life using unfamiliar technologies was challenging, but every step offered a valuable lesson.
+
+One of my proudest achievements was building an interactive Node Graph using TypeScript. This feature applies graph theory to model family connections and supports backend clustering to manage relational complexity. Designing a visual system that accommodates dynamic relationship types — like multiple siblings or children — sharpened my problem-solving and critical thinking skills. I used tools like Recharts for data visualization and React Router DOM for smooth, dynamic navigation across the app.
+
+Another highlight was the Generative AI integration. With Gemini, the chatbot can answer questions about family relationships, suggest relation names in different languages, and assist with app navigation. Combined with Zod and React Hook Form for robust input validation, this feature made user interactions smarter and more intuitive.
+
+Throughout development, I worked with a modern and diverse tech stack that deepened my full-stack development knowledge. On the frontend, I used Vite for fast builds and shadcn/ui with Radix UI to create accessible, customizable components. Lucide-react supplied consistent icons, while clsx and tailwindcss-animate helped manage conditional styling and transitions. I integrated Embla Carousel for responsive content layout and relied on TanStack React Query for efficient data fetching and caching. For toast notifications and alerts, Sonner provided a lightweight and flexible solution.
+
+On the backend, I implemented secure APIs with Express and used Mongoose to model the database. Authentication was handled using JWT, with bcrypt for password hashing. Middleware like helmet, cookie-parser, and express-rate-limit helped improve security and performance, while dotenv kept environment configurations organized.
+
+To streamline development, I leaned on TypeScript to ensure type safety, ESLint for code quality, and Postman for testing. Tools like ts-node-dev sped up backend iteration while large language models like ChatGPT and GitHub Copilot offered intelligent suggestions that boosted productivity and helped me overcome coding challenges.
+
+Looking back, building Kinnected has not only strengthened my technical skills but also boosted my confidence in tackling real-world problems through code. Most importantly, it reminded me that learning never stops, and that curiosity, persistence, and the right tools can turn any ambitious idea into a working reality.
+
+The application aims to improve connectivity amongst family members. 
+Living in a world where most families have becone nuclear and where one barely even knows their first cousins, we hope to develope a platform to reachout to family as far as one can imagine. 
+The application aims to merge family trees at common nodes and build a network where one can find family with just a simple search.
+
+User interface:
+- The first page after registration would be a single node with the user's details
+- The user can create a card for a relative, with their name and any other dteails, and share it with the relative
+- The relative is to simply create an account and accept the card
+- The home screen of both will be updated to keep the main user as the central node
+- As the number of connections for an account increases, a web is created
+- The home page will also provide two search bars. One, to search details of connections and an other, to find other contacts
+- When a specific contact is selected, the page shifts a little and that node's close connections are unlocked
+- The user can also view a connection card by double clicking on it
+- The color of these connection cards can be changed and special descriptions added
+- Users can create a digital family album where they can upload pictures, documents, and stories about family history. This feature can also allow users to share old family memories, heritage to build a richer family tree
+- As the network grows, the family tree can be visualized in a dynamic, interactive format. You can zoom in/out to explore distant branches and see how different family members are connected over time. You could also filter by specific branches (e.g., maternal or paternal side) to explore connections.
+
+1. Why should I use this application?
+A: To connect with relatives and explore your family trees
+
+2. Who can I connect with?
+A: You can search your relatives and connect with those that are a part of your family trees
+
+3. What details can I see?:
+A: You can see your relatives' Name, UserID, Phone number, Relation to You, Profile Picture, Social Media Details (Email, Facebook, Instagram, etc), Home address and/or any other details that they are willing to share. Most of the details are optional so only those details that they wish to share will be see. 
+
+You can also add your own description for each contact and this would be private to you alone.
+
+4. Can I search for contacts?
+A: It depends on whether you are already connected with them or not.
+
+- If the relative is not in your contact list then, you can search for the relative using their Name, UserID and Contact Number.
+
+Over your connections, you can search for a contact with any of the above details and also with their location, relation, education, description (The one that is only visible to you), occupation and nickname.
+
+The search for some details like Profile picture and Social Media Details is dependent on the settings of that user. If they chose to keep them private (To thier connections only) then they will remain seen only to their connections. If they make it public then these details are also seen when someone, not in their connections, searches for their contact.
+
+5. Is my data safe?
+A: You can connect with an other user only after accepting a connection request. All the details of the contact (Like Name, AccountID and Phone number) before hand and you can verify the contact before accepting the connect request.
+
+6. What happens when I delete my account?
+A: When you delte your account you public information can still be seen by your connections and yourprivate information will be deleted to everyone including your connections.
+
+Backend:
+- The application will have a database with multiple tables.
+- A new table is createdd each time an account is created. A part of the table is destroyed if the account is deleted.
+- This table will contain the details of each contact that are unique to the user like a nickname, the relation and any further description they wish to add for that contact.
+- One common table is maintained to store all the details of the users. This table will consist of their UserId (Primary Key), Name (Not Null), Contact Number (Not Null), Profile Picture, Social Media Account Details, location, relation and education.
+- Finally, a login table is maintained to manage the UserId-Password pair of the user. 
