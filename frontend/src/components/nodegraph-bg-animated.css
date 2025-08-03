@@ -1,0 +1,45 @@
+@keyframes nodegraphGradientMove {
+  0% {
+    background-position: 0% 50%, 100% 50%;
+    filter: brightness(1) saturate(1);
+  }
+  25% {
+    background-position: 50% 0%, 50% 100%;
+    filter: brightness(1.08) saturate(1.1);
+  }
+  50% {
+    background-position: 100% 50%, 0% 50%;
+    filter: brightness(1.12) saturate(1.2);
+  }
+  75% {
+    background-position: 50% 100%, 50% 0%;
+    filter: brightness(1.08) saturate(1.1);
+  }
+  100% {
+    background-position: 0% 50%, 100% 50%;
+    filter: brightness(1) saturate(1);
+  }
+}
+
+.nodegraph-bg-animated {
+  position: relative;
+  background:
+    linear-gradient(120deg, #e0ffe0 0%, #e0f7fa 25%, #ffe6b3 50%, #f7e8d7 75%, #b3e6ff 100%),
+    radial-gradient(circle at 80% 20%, #fffbe6 0%, #ffe6b3 40%, transparent 80%),
+    radial-gradient(circle at 20% 80%, #e0ffe0 0%, #b3ffb3 40%, transparent 80%);
+  background-blend-mode: lighten, screen, normal;
+  background-size: 300% 300%, 200% 200%, 200% 200%;
+  animation: nodegraphGradientMove 14s ease-in-out infinite;
+  box-shadow: 0 0 60px 10px #ffe6b3cc, 0 0 120px 30px #b3e6ff55;
+  overflow: hidden;
+}
+
+.nodegraph-bg-animated::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 60% 40%, #fff9 0%, #fff0 70%);
+  opacity: 0.5;
+  z-index: 1;
+}
